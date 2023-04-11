@@ -322,3 +322,156 @@ spec:
             cpu: "500m"
             memory: "1Gi"
 ```
+#### 3.8.3. Specify Environment Variables, Secrets, or Storage Options
+
+In the `deployment.yaml` file, you can specify any necessary environment variables, secrets, or storage options for your application:
+
+\```yaml
+# ...
+spec:
+  # ...
+  template:
+    # ...
+    spec:
+      containers:
+      - name: terrafargatepum
+        # ...
+        env:
+        - name: EXAMPLE_ENV_VARIABLE
+          value: "example_value"
+        # Add more environment variables, secrets, or storage options as needed
+\```
+
+Apply the deployment to your Kubernetes cluster:
+
+\```sh
+kubectl apply -f deployment.yaml
+\```
+
+### 3.9. Create a Kubernetes Service
+
+#### 3.9.1. Define a Kubernetes Service Resource
+
+Create a file named `service.yaml` in the `k8s` directory:
+
+\```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: terrafargatepum
+  namespace: terrafargatepum
+spec:
+  selector:
+    app: terrafargatepum
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+\```
+
+#### 3.9.2. Expose Your Application Within the EKS Cluster
+
+Apply the service to your Kubernetes cluster:
+
+\```sh
+kubectl apply -f service.yaml
+\```
+
+### 3.10. Set Up an Application Load Balancer (ALB)
+
+#### 3.10.1. Create an ALB and Associated Target Group
+
+In the `main.tf` file, create an ALB and an associated target group:
+
+\```hcl
+resource "aws_lb" "this" {
+  name               = "TerraFargatePUM-ALB"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.this.id]
+  subnets            = [aws_subnet.public.id]
+}
+
+resource "aws_lb_target_group" "this" {
+  name     = "TerraFargatePUM-TargetGroup"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.this.id
+}
+\```
+
+#### 3.10.2. Configure the ALB Ingress to Use the Kubernetes Service
+
+In the `k8s` directory, create a file named `ingress.yaml`:
+
+\```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: terrafargatepum
+  namespace: terrafargatepum
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: terrafargatepum
+            port:
+              number: 80
+\```
+
+Apply the ingress to your Kubernetes cluster:
+
+\```sh
+kubectl apply -f ingress.yaml
+\```
+
+#### 3.10.3. Update Security Group Rules to Allow Traffic from the ALB
+
+Update the security group rules in `main.tf` to allow traffic from the ALB:
+
+\```hcl
+resource "aws_security_group" "this" {
+  # ...
+
+  ingress {
+    # ...
+  }
+
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_lb.this.security_group.id]
+  }
+
+  egress {
+    # ...
+  }
+
+  tags = {
+    # ...
+  }
+}
+\```
+
+Apply the changes to your Terraform infrastructure:
+
+\```sh
+terraform init
+terraform apply
+\```
+
+Now, your application should be accessible through the Application Load Balancer (ALB). You can retrieve the ALB's DNS name to access your application:
+
+\```sh
+aws lb describe-load-balancers --names TerraFargatePUM-ALB --query "LoadBalancers[].DNSName"
+\```
+
+Use the DNS name provided in the output to access your application.
+
+With these steps completed, you have successfully defined and deployed an application using a Windows container with Oracle DB on an Amazon EKS cluster using Terraform.

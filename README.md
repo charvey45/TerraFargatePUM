@@ -47,3 +47,28 @@ The project covers the complete deployment process, from setting up the developm
     Monitor and manage the EKS cluster and Fargate service using the EKS Console, Kubernetes Dashboard, or kubectl commands.
 
 Upon completion of the project, the PUM application will be running in a Windows container on AWS Fargate within an EKS cluster, and the infrastructure will be managed using Terraform for seamless updates, scaling, and maintenance.
+
+
+## Repo Structure
+
+``` text
+.
+├── terraform/
+│   ├── variables.tf
+│   ├── main.tf
+│   ├── outputs.tf
+│   └── modules/
+├── docker/
+│   └── Dockerfile
+├── kubernetes/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── namespace.yaml
+└── docs/
+    └── additional_documentation.md
+```
+
+- `terraform/`: This folder contains all Terraform configuration files, such as variables.tf, main.tf, and outputs.tf.
+- `docker/`: This folder contains the Dockerfile(s) for your Windows container with the PUM application.
+- `kubernetes/`: This folder contains Kubernetes resource files, such as deployment.yaml, service.yaml, and optionally, namespace.yaml.
+- `docs/`: This folder contains any additional documentation or guides for your project.
